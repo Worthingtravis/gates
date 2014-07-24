@@ -29,7 +29,6 @@ function frame() {
 
 	//update()
 	
-
 	draw(dt);
 	last = now;
 	requestAnimationFrame(frame);

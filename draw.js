@@ -11,6 +11,17 @@ function draw(dt){
 	ctx.fillStyle = '#000000'
 	ctx.fillText(mousedown, 200, 50);
 	ctx.fillText(count, 5, 5);
+
+	if (lines[0]){
+		ctx.fillText(lines[0][0], 300, 5);
+		ctx.fillText(lines[0][1], 340, 5);
+		ctx.fillText(lines[0][2], 300, 20);
+		ctx.fillText(lines[0][3], 340, 20);
+	}
+
+	ctx.fillText(nearestPos.x, 200, 20);
+	ctx.fillText(nearestPos.y, 240, 20);
+
 	
 	drawLines(lines);
 
@@ -43,26 +54,34 @@ function drawGrid(){
 
 function drawLines(lines){
 	for (var i=0; i<lines.length; i++){
-		//for (var j=0; j<lines[i].length; j++){
 			
-			var x1 = lines[i][0]
-			var y1 = lines[i][1]
-			var x2 = lines[i][2]
-			var y2 = lines[i][3]
+		var x1 = lines[i][0]
+		var y1 = lines[i][1]
+		var x2 = lines[i][2]
+		var y2 = lines[i][3]
 
-			ctx.beginPath();
-			ctx.moveTo(x1, y1);
-			ctx.arc(x1, y1, 2, 0, 2*Math.PI, false);
-			ctx.moveTo(x1, y1);
-			ctx.lineTo(x2, y2);
-			ctx.moveTo(x2, y2);
-			ctx.arc(x2, y2, 2, 0, 2*Math.PI, false);
-			ctx.fillStyle = '#000000';
-			ctx.fill();
-			ctx.strokeStyle='#000000';
-			ctx.lineWidth = 2;
-			ctx.stroke();
-		//}
+		var mx = (x1+x2)/2
+		var my = (y1+y2)/2
+
+		ctx.beginPath();
+		ctx.moveTo(x1, y1);
+		ctx.arc(x1, y1, 2, 0, 2*Math.PI, false);
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
+		ctx.moveTo(x2, y2);
+		ctx.arc(x2, y2, 2, 0, 2*Math.PI, false);
+
+		ctx.fillStyle = colors[lines[i].id]
+		ctx.strokeStyle = colors[lines[i].id]
+
+		//ctx.fillStyle = '#000000';
+		//ctx.strokeStyle='#000000';
+		ctx.fill();
+		ctx.lineWidth = 2;
+		ctx.stroke();
+
+		ctx.fillStyle = '#000000';
+		ctx.fillText(lines[i].id, mx, my-12);
 	}
 }
 
@@ -78,6 +97,3 @@ function drawLineInProgress(x, y, m){
 	ctx.lineWidth = 2;
 	ctx.stroke();
 }
-
-
-var l = [[[20, 20, 50, 50],[50, 50, 150, 270]]]
