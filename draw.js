@@ -9,24 +9,19 @@ function draw(dt){
 	ctx.textAlign = 'left';
 	ctx.textBaseline = 'top'
 	ctx.fillStyle = '#000000'
-	ctx.fillText(mousedown, 200, 50);
+	//ctx.fillText(mousedown, 200, 50);
 	ctx.fillText(count, 5, 5);
 
-	if (lines[0]){
-		ctx.fillText(lines[0][0], 300, 5);
-		ctx.fillText(lines[0][1], 340, 5);
-		ctx.fillText(lines[0][2], 300, 20);
-		ctx.fillText(lines[0][3], 340, 20);
-	}
 
-	ctx.fillText(nearestPos.x, 200, 20);
-	ctx.fillText(nearestPos.y, 240, 20);
+	//ctx.fillText(nearestPos.x, 200, 20);
+	//ctx.fillText(nearestPos.y, 240, 20);
 
 	
 	drawLines(lines);
+	i1.drawInput();
 
 	if (mousedown == 1){
-		ctx.fillText("mousedown", 100, 50);
+		//ctx.fillText("mousedown", 100, 50);
 		drawLineInProgress(lineStartPos.x, lineStartPos.y, mousepos)
 	}
 }
@@ -77,7 +72,12 @@ function drawLines(lines){
 		//ctx.fillStyle = '#000000';
 		//ctx.strokeStyle='#000000';
 		ctx.fill();
-		ctx.lineWidth = 2;
+		if (lines[i].mouseover){
+			ctx.lineWidth = 4;
+		}else {
+			ctx.lineWidth = 2;
+		}
+		
 		ctx.stroke();
 
 		ctx.fillStyle = '#000000';
