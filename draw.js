@@ -13,14 +13,13 @@ function draw(dt){
 	ctx.fillText(count, 5, 5);
 
 
-	//ctx.fillText(nearestPos.x, 200, 20);
-	//ctx.fillText(nearestPos.y, 240, 20);
+	ctx.fillText(lineStarted, 200, 20);
 
 	
 	drawLines(lines);
 	i1.drawInput();
 
-	if (mousedown == 1){
+	if (lineStarted){
 		//ctx.fillText("mousedown", 100, 50);
 		drawLineInProgress(lineStartPos.x, lineStartPos.y, mousepos)
 	}
@@ -83,6 +82,10 @@ function drawLines(lines){
 		ctx.fillStyle = '#000000';
 		ctx.fillText(lines[i].id, mx, my-12);
 	}
+}
+
+function drawLine(x1, y1, x2, y2, mouseover){
+
 }
 
 function drawLineInProgress(x, y, m){

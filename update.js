@@ -1,17 +1,18 @@
 var count = 0;
 
-var mousedown,
-	mouseup,
-	mousemove;
+var mousedown;
+var mouseup;
+var mousemove;
 var mousepos = {x:0, y:0}
 var nearestPos = {x:0, y:0}
 var lineStartPos = {x:0, y:0}
 var releasePos = {x:0, y:0}
+var lineStarted = false;
 
 var lineCount = 0;
 
 var lines = []
-var colors = []
+var colors = ["#FF0000", "#00FF00", "#0000FF"]
 var action = "";
 var draggables = [];
 var getClassOf = Function.prototype.call.bind(Object.prototype.toString);
@@ -76,25 +77,52 @@ function mouseDown(event, button){
 	mouseup = 0;
 	mousepos = getMousePos(event)
 	lineStartPos = getNearestSquare(mousepos)
+	
+	if (button == 1){
+		var moveLines = []
+		for (var i=0; i<lines.length; i++){
+			if (lines[i].mouseover){
+				moveLines.push(lines[i]);
+			}
+		}
+		if (moveLines.length == 0){
+			lineStarted = true;
+		}
+
+		
+	}
 }
 
 function mouseUp(event, button){
 	mousepos = getMousePos(event)
 	releasePos = getNearestSquare(mousepos)
+
 	if (button == mousedown){
 		mousedown = 0;
 	}
-	if ((button == 1) && (lineStartPos.x != releasePos.x ||
+	
+	if ((button == 1) && lineStarted && (lineStartPos.x != releasePos.x ||
 		lineStartPos.y != releasePos.y)){
+		lineStarted = false;
 		createLine(lineStartPos.x, lineStartPos.y, releasePos.x, releasePos.y)
+
 	}
 	if (button == 2){
-		for (var i=0; i<lines.length; i++){
+		var del = false
+		for (var i=lines.length-1; i>=0; i--){
 			if (lines[i].mouseover){
+				del = true;
 				lines.splice(i, 1);
 			}
 		}
+		if (del){
+			organizeLines(lines)
+		}
+		
 	}
+	
+	lineStarted = false;
+	
 }
 
 function mouseMove(event){
@@ -109,18 +137,18 @@ function mouseMove(event){
 
 function createLine(x1, y1, x2, y2){
 	var l = [x1, y1, x2, y2]
-	l.id = lineCount
+
 	l.mouseover = false;
 	l.powered = false;
 	l.coords = [x1, y1, x2, y2];
 	l.checkMouseOver = mouseIsOver;
-	lineCount += 1;
+	
 	var index = lines.length
 	var colorNum = Math.floor(Math.random()*16777215)+1
 	colors.push('#'+colorNum.toString(16));
 	lines.push(l)
 
-	consolidateLines(lines);
+	organizeLines(lines)
 }
 
 function consolidateLines(l){
@@ -145,6 +173,17 @@ function consolidateLines(l){
 	for (var k=0; k<=c; k++){
 		consolidateLines(l)
 	}
+}
+
+function resetLines(l){
+	for (var i=0; i<l.length; i++){
+		l[i].id = i;
+	}
+}
+
+function organizeLines(l){
+	resetLines(l)
+	consolidateLines(l)
 }
 
 function linesAreConnected(l1, l2){
