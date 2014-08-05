@@ -12,10 +12,15 @@ var lineStarted = false;
 var lineCount = 0;
 
 var lines = []
-var colors = ["#FF0000", "#00FF00", "#0000FF"]
 var action = "";
 var draggables = [];
 var getClassOf = Function.prototype.call.bind(Object.prototype.toString);
+
+var draggable;
+var dragging = false;
+var dragOffset = {x:0, y:0}
+
+var liveWires = []
 
 function update(event, mouseState){
 	if (mouseState == 'mousedown'){
@@ -79,17 +84,23 @@ function mouseDown(event, button){
 	lineStartPos = getNearestSquare(mousepos)
 	
 	if (button == 1){
-		var moveLines = []
-		for (var i=0; i<lines.length; i++){
-			if (lines[i].mouseover){
-				moveLines.push(lines[i]);
+		draggable = getDraggable(draggables, mousepos.x, mousepos.y)
+		if (draggable != null){
+			dragging = true;
+			dragOffset.x = mousepos.x - draggable.x
+			dragOffset.y = mousepos.y - draggable.y
+		}
+		else {
+			var moveLines = []
+			for (var i=0; i<lines.length; i++){
+				if (lines[i].mouseover){
+					moveLines.push(lines[i]);
+				}
 			}
-		}
-		if (moveLines.length == 0){
-			lineStarted = true;
-		}
-
-		
+			if (moveLines.length == 0){
+				lineStarted = true;
+			}
+		}	
 	}
 }
 
@@ -101,12 +112,20 @@ function mouseUp(event, button){
 		mousedown = 0;
 	}
 	
-	if ((button == 1) && lineStarted && (lineStartPos.x != releasePos.x ||
-		lineStartPos.y != releasePos.y)){
-		lineStarted = false;
-		createLine(lineStartPos.x, lineStartPos.y, releasePos.x, releasePos.y)
-
+	if (button == 1) {
+		if (lineStarted && (lineStartPos.x != releasePos.x ||
+			lineStartPos.y != releasePos.y)){
+			lineStarted = false;
+			createLine(lineStartPos.x, lineStartPos.y, releasePos.x, releasePos.y)
+		}
+		if (dragging){
+			dragging = false;
+			var p = getNearestSquare({x: draggable.x, y: draggable.y})
+			draggable.x = p.x
+			draggable.y = p.y
+		}
 	}
+	
 	if (button == 2){
 		var del = false
 		for (var i=lines.length-1; i>=0; i--){
@@ -117,6 +136,10 @@ function mouseUp(event, button){
 		}
 		if (del){
 			organizeLines(lines)
+		}
+		draggable = getDraggable(draggables, mousepos.x, mousepos.y)
+		if (draggable != null){
+			draggable.live = !draggable.live;
 		}
 		
 	}
@@ -129,225 +152,25 @@ function mouseMove(event){
 	mousemove = true;
 	mousepos = getMousePos(event)
 	nearestPos = getNearestSquare(mousepos)
-
 	for (var i=0; i<lines.length; i++){
 		lines[i].checkMouseOver(mousepos.x, mousepos.y)
-	}
-}
-
-function createLine(x1, y1, x2, y2){
-	var l = [x1, y1, x2, y2]
-
-	l.mouseover = false;
-	l.powered = false;
-	l.coords = [x1, y1, x2, y2];
-	l.checkMouseOver = mouseIsOver;
-	
-	var index = lines.length
-	var colorNum = Math.floor(Math.random()*16777215)+1
-	colors.push('#'+colorNum.toString(16));
-	lines.push(l)
-
-	organizeLines(lines)
-}
-
-function consolidateLines(l){
-	var c = 0
-	for (var i=0; i<l.length-1; i++){
-		for (var j=i+1; j<l.length; j++){
-			if (linesAreConnected(l[i], l[j])) {
-				if (l[j].id == l[i].id){
-
-				}
-				else if (l[j].id < l[i].id) {
-					l[i].id = l[j].id;
-					c += 1;
-				}
-				else {
-					l[j].id = l[i].id;
-					c += 1;
-				}
+		var x = lines[i]
+		// checks if its the last line, and if not, pushes it to the last
+		// so that the red dots are visible above other lines
+		if (lines[i].mouseover){
+			if (i != (lines.length-1)){
+				lines.splice(i, 1);
+				lines.push(x);
 			}
 		}
 	}
-	for (var k=0; k<=c; k++){
-		consolidateLines(l)
-	}
-}
 
-function resetLines(l){
-	for (var i=0; i<l.length; i++){
-		l[i].id = i;
-	}
-}
-
-function organizeLines(l){
-	resetLines(l)
-	consolidateLines(l)
-}
-
-function linesAreConnected(l1, l2){
-	var ax1 = l1[0];
-	var ay1 = l1[1];
-	var ax2 = l1[2];
-	var ay2 = l1[3];
-
-	var bx1 = l2[0];
-	var by1 = l2[1];
-	var bx2 = l2[2];
-	var by2 = l2[3];
-
-	if (ax1 == bx1 && ay1 == by1){
-		return true;
-	}
-	else if (ax2 == bx1 && ay2 == by1){
-		return true;
-	}
-	else if (ax1 == bx2 && ay1 == by2){
-		return true;
-	}
-	else if (ax2 == bx2 && ay2 == by2){
-		return true;
-	}
-	else {
-		return false;
-	}
-}
-
-function linesAreIdentical(l1, l2){
-	var ax1 = l1[0];
-	var ay1 = l1[1];
-	var ax2 = l1[2];
-	var ay2 = l1[3];
-
-	var bx1 = l2[0];
-	var by1 = l2[1];
-	var bx2 = l2[2];
-	var by2 = l2[3];
-
-	if (ax1 == bx1 && ay1 == by1){
-		if (ax2 == bx2 && ay2 == by2){
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
-	else if (ax1 == bx2 && ay1 == by2){
-		if (ax2 == bx1 && ay2 == by1){
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
-	else {
-		return false;
+	if (dragging){
+		draggable.x = mousepos.x - dragOffset.x
+		draggable.y = mousepos.y - dragOffset.y
 	}
 }
 
 
-function debug(){
-	document.getElementById('debug').innerHTML = "";
-	for (var i=0; i<lines.length; i++){
-		var text = "<li> ["+lines[i][0]/10+", "+
-			lines[i][1]/10+", "+
-			lines[i][2]/10+", "+
-			lines[i][3]/10+"]: id = "+
-			lines[i].id+" </li>";
-		document.getElementById('debug').innerHTML +=text
-	}
-}
-
-function input(x, y){
-	this.x = x;
-	this.y = y;
-	this.h = 20;
-	this.w = 20;
-	this.drawInput = function(){
-		ctx.beginPath();
-		ctx.rect(this.x, this.y, this.w, this.h);
-		ctx.fillStyle = "#FF0000"
-		//ctx.strokeStyle = "#000000"
-		//ctx.lineWidth = 1;
-		ctx.fill();
-		//ctx.stroke();
-	}
-	this.mouseIsOver = function(mx, my){
-		if (mx >= this.x && mx <= this.x+this.w &&
-			my >= this.y && mx <= this.y+this.h){
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
-}
-
-var i1 = new input(100, 100);
+var i1 = new input(110, 110);
 draggables.push(i1);
-
-function getDraggable(mx, my){
-	for (var i=0; i<draggables.length; i++){
-		if (draggables[i].mouseIsOver(mx, my)){
-			return draggables[i];
-		}
-		else {
-			return null;
-		}
-	}
-}
-
-function mouseIsOver(mx, my){
-	var x1 = this.coords[0];
-	var y1 = this.coords[1];
-	var x2 = this.coords[2];
-	var y2 = this.coords[3];
-	var m = (y2-y1)/(x2-x1)
-	if (Math.abs(m) > 1){
-		//solve for x as as function of y
-		if (y2 < y1){
-			var x1 = this.coords[2];
-			var y1 = this.coords[3];
-			var x2 = this.coords[0];
-			var y2 = this.coords[1];
-		}
-		if ((my < y2+3) && (my > y1-3)){
-			m = (x2-x1)/(y2-y1)
-			var x = ((my-y1)*m) + x1
-
-			if ((mx > x-3) && (mx < x+3)){
-				this.mouseover = true;
-			}
-			else {
-				this.mouseover = false;
-			}
-		}
-		else {
-			this.mouseover = false;
-		}
-	}
-	else {
-		//solve for y as a function of x
-		if (x2 < x1){
-			var x1 = this.coords[2];
-			var y1 = this.coords[3];
-			var x2 = this.coords[0];
-			var y2 = this.coords[1];
-		}
-		if ((mx < x2+3) && (mx > x1-3)){
-			var b = y2 - (x2*m);
-			var y = mx*m + b
-
-			if ((my > y-3) && (my < y+3)){
-				this.mouseover = true;
-			}
-			else {
-				this.mouseover = false;
-			}
-		}
-		else {
-			this.mouseover = false;
-		}
-	}
-}

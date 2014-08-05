@@ -9,18 +9,15 @@ function draw(dt){
 	ctx.textAlign = 'left';
 	ctx.textBaseline = 'top'
 	ctx.fillStyle = '#000000'
-	//ctx.fillText(mousedown, 200, 50);
 	ctx.fillText(count, 5, 5);
-
-
-	ctx.fillText(lineStarted, 200, 20);
-
 	
+	
+	for (var i=0; i<draggables.length; i++){
+		draggables[i].draw();
+	}
 	drawLines(lines);
-	i1.drawInput();
 
 	if (lineStarted){
-		//ctx.fillText("mousedown", 100, 50);
 		drawLineInProgress(lineStartPos.x, lineStartPos.y, mousepos)
 	}
 }
@@ -34,10 +31,10 @@ function drawGrid(){
 			coords = [i/20, j/20]
 
 			if (squareColor){
-				ctx.fillStyle = '#DDDDDD';
+				ctx.fillStyle = '#F6F6F6';
 			}
 			else {
-				ctx.fillStyle = '#CCCCCC';
+				ctx.fillStyle = '#EEEEEE';
 			}
 			squareColor = !squareColor
 			ctx.fill();
@@ -57,35 +54,38 @@ function drawLines(lines){
 		var mx = (x1+x2)/2
 		var my = (y1+y2)/2
 
-		ctx.beginPath();
-		ctx.moveTo(x1, y1);
-		ctx.arc(x1, y1, 2, 0, 2*Math.PI, false);
-		ctx.moveTo(x1, y1);
-		ctx.lineTo(x2, y2);
-		ctx.moveTo(x2, y2);
-		ctx.arc(x2, y2, 2, 0, 2*Math.PI, false);
-
-		ctx.fillStyle = colors[lines[i].id]
-		ctx.strokeStyle = colors[lines[i].id]
+		drawLine(x1, y1, x2, y2, lines[i].mouseover, false)
 
 		//ctx.fillStyle = '#000000';
-		//ctx.strokeStyle='#000000';
-		ctx.fill();
-		if (lines[i].mouseover){
-			ctx.lineWidth = 4;
-		}else {
-			ctx.lineWidth = 2;
-		}
-		
-		ctx.stroke();
-
-		ctx.fillStyle = '#000000';
-		ctx.fillText(lines[i].id, mx, my-12);
+		//ctx.fillText(lines[i].id, mx, my-12);
 	}
 }
 
-function drawLine(x1, y1, x2, y2, mouseover){
+function drawLine(x1, y1, x2, y2, mouseover, live){
+	ctx.beginPath();
+	ctx.moveTo(x1, y1);
+	ctx.lineTo(x2, y2);
+	ctx.moveTo(x1, y1);
+	ctx.arc(x1, y1, 2, 0, 2*Math.PI, false);
+	ctx.moveTo(x2, y2);
+	ctx.arc(x2, y2, 2, 0, 2*Math.PI, false);
 
+	if (mouseover){
+		ctx.strokeStyle='#FF0000';
+		ctx.fillStyle='#FF0000';
+		ctx.lineWidth = 3;
+	} else if (live) {
+		ctx.strokeStyle='#FFFF00';
+		ctx.fillStyle='#FFFF00';
+		ctx.lineWidth = 2;
+	}
+	else {
+		ctx.strokeStyle='#000000';
+		ctx.fillStyle='#000000';
+		ctx.lineWidth = 2;
+	}
+	ctx.fill();
+	ctx.stroke();
 }
 
 function drawLineInProgress(x, y, m){
