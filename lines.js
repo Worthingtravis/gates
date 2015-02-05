@@ -1,3 +1,4 @@
+//create a line with the given inputs
 function createLine(x1, y1, x2, y2){
 	var l = [x1, y1, x2, y2]
 	l.mouseover = false;
@@ -8,6 +9,7 @@ function createLine(x1, y1, x2, y2){
 	organizeLines(lines)
 }
 
+//sets the ids of connected lines to be the same
 function consolidateLines(l){
 	var c = 0
 	for (var i=0; i<l.length-1; i++){
@@ -32,17 +34,21 @@ function consolidateLines(l){
 	}
 }
 
+//makes the id of every line different
 function resetLines(l){
 	for (var i=0; i<l.length; i++){
 		l[i].id = i;
 	}
 }
 
+//redoes computations for line ids
 function organizeLines(l){
 	resetLines(l)
 	consolidateLines(l)
 }
 
+
+//takes two lines and tells you if they are connected
 function linesAreConnected(l1, l2){
 	var ax1 = l1[0];
 	var ay1 = l1[1];
@@ -71,6 +77,8 @@ function linesAreConnected(l1, l2){
 	}
 }
 
+
+//takes two lines and tells you if they are identical
 function linesAreIdentical(l1, l2){
 	var ax1 = l1[0];
 	var ay1 = l1[1];
@@ -116,6 +124,9 @@ function debug(){
 	}
 }
 
+
+//note this is actually a method connected to a line object, not a standalone function
+//tells you if the mouse is over that line or not
 function mouseIsOver(mx, my){
 	var x1 = this.coords[0];
 	var y1 = this.coords[1];

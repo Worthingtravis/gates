@@ -7,6 +7,8 @@ canvas.oncontextmenu = function(e){
 }
 
 var game = {};
+var gameState = 0 //tells you if your on main menu or one of the levels
+var levelsUnlocked = [1, 1, 1, 0, 0, 0, 0, 0, 0, 0]
 
 var now, 
 	dt = 0,

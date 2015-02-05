@@ -1,24 +1,31 @@
 var count=0
+
 function draw(dt){
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	drawGrid();
-	count +=1
 
-	ctx.beginPath();
-	ctx.font = '12pt Calibri';
-	ctx.textAlign = 'left';
-	ctx.textBaseline = 'top'
-	ctx.fillStyle = '#000000'
-	ctx.fillText(count, 5, 5);
-	
-	
-	for (var i=0; i<draggables.length; i++){
-		draggables[i].draw();
+	if (gameState == 0){
+		drawMenu();
 	}
-	drawLines(lines);
+	else {
+		drawGrid();
+		count +=1
 
-	if (lineStarted){
-		drawLineInProgress(lineStartPos.x, lineStartPos.y, mousepos)
+		ctx.beginPath();
+		ctx.font = '12pt Calibri';
+		ctx.textAlign = 'left';
+		ctx.textBaseline = 'top'
+		ctx.fillStyle = '#000000'
+		ctx.fillText(count, 5, 5);
+		
+		
+		for (var i=0; i<draggables.length; i++){
+			draggables[i].draw();
+		}
+		drawLines(lines);
+
+		if (lineStarted){
+			drawLineInProgress(lineStartPos.x, lineStartPos.y, mousepos)
+		}
 	}
 }
 
@@ -97,6 +104,32 @@ function drawLineInProgress(x, y, m){
 	ctx.fillStyle = '#000000';
 	ctx.fill();
 	ctx.strokeStyle='#000000';
+	ctx.lineWidth = 2;
+	ctx.stroke();
+}
+
+function drawMenu(){
+	drawButton(50, 50, 0, 0);
+}
+
+function drawButton(x, y, level, locked){
+	width = 50;
+	height = 50;
+	r = 10;
+	ctx.beginPath();
+	ctx.moveTo(x+r, y);
+	ctx.lineTo(x+width-r, y);
+	ctx.quadraticCurveTo(x+width, y, x+width, y+r);
+	ctx.lineTo(x+width, y+height-r);
+	ctx.quadraticCurveTo(x+width, y+height, x+width-r, y+height);
+	ctx.lineTo(x+r, y+height);
+	ctx.quadraticCurveTo(x, y+height, x, y+height-r);
+	ctx.lineTo(x, y+r);
+	ctx.quadraticCurveTo(x, y, x+r, y);
+	ctx.lineJoin = "miter"
+
+	ctx.fillStyle = '#D0FFFF';
+	ctx.fill();
 	ctx.lineWidth = 2;
 	ctx.stroke();
 }

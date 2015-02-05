@@ -22,6 +22,9 @@ var dragOffset = {x:0, y:0}
 
 var liveWires = []
 
+var i1 = new input(110, 110, "a");
+draggables.push(i1);
+
 function update(event, mouseState){
 	if (mouseState == 'mousedown'){
 		if (("which" in event && event.which == 1) ||
@@ -164,6 +167,7 @@ function mouseMove(event){
 			}
 		}
 	}
+	getDraggable(draggables, mousepos.x, mousepos.y)
 
 	if (dragging){
 		draggable.x = mousepos.x - dragOffset.x
@@ -172,5 +176,3 @@ function mouseMove(event){
 }
 
 
-var i1 = new input(110, 110);
-draggables.push(i1);
