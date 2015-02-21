@@ -2,49 +2,130 @@ var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
 canvas.width = 800;
 canvas.height = 600;
-canvas.oncontextmenu = function(e){
+canvas.oncontextmenu = function(){
 	return false;
 }
 
-var game = {};
-var gameState = 0 //tells you if your on main menu or one of the levels
-var levelsUnlocked = [1, 1, 1, 0, 0, 0, 0, 0, 0, 0]
+var gameState = initializeGameState()
 
-var now, 
-	dt = 0,
-	last = timestamp(),
-	step = 1/60;
+function initializeGameState(){
+	var gs = {}
+	gs.level = 0
+	gs.entities = []
 
 
-function timestamp(){
-	if (window.performance && window.performance.now){
-		return window.performance.now()
+	gs.entities[0] = [
+		new levelButton(145, 105, 1, 1, 0, 1, 0, "levelName"),
+		new levelButton(225, 105, 2, 1, 0, 1, 0, "levelName"),
+		new levelButton(305, 105, 3, 1, 0, 1, 0, "levelName"),
+		new levelButton(385, 105, 4, 1, 0, 1, 0, "levelName"),
+		new levelButton(465, 105, 5, 1, 0, 1, 0, "levelName"),
+		]
+
+	b = new menuButton(3, 3)
+	gs.entities[1] = [b]
+	return gs
+}
+
+
+function mouseDown(event){
+	var rect = canvas.getBoundingClientRect();
+	x = event.clientX - rect.left
+	y = event.clientY - rect.top
+	if(event.button == 0){
+		for(var i=0; 
+			i<gameState.entities[gameState.level].length;
+			i++){
+			gameState.entities[gameState.level][i].handleMouseDown(x, y, 0)
+		}
 	}
-	else {
-		return (new Date).getTime();
+	else if(event.button == 2){
+		for(var i=0; 
+			i<gameState.entities[gameState.level].length;
+			i++){
+			gameState.entities[gameState.level][i].handleMouseDown(x, y, 2)
+		}
 	}
 }
 
-function frame() {
-	now = timestamp();
-	dt = dt + Math.min(1, (now-last)/1000); //duration capped at 1.0 seconds
-
-	//update()
-	
-	draw(dt);
-	last = now;
-	requestAnimationFrame(frame);
+function mouseUp(event){
+	var rect = canvas.getBoundingClientRect();
+	x = event.clientX - rect.left
+	y = event.clientY - rect.top
+	if(event.button == 0){
+		for(var i=0; 
+			i<gameState.entities[gameState.level].length;
+			i++){
+			gameState.entities[gameState.level][i].handleMouseUp(x, y, 0)
+		}
+	}
+	else if(event.button == 2){
+		for(var i=0; 
+			i<gameState.entities[gameState.level].length;
+			i++){
+			gameState.entities[gameState.level][i].handleMouseUp(x, y, 2)
+		}
+	}
 }
 
-canvas.addEventListener('mousedown', function(e) { 
-	return update(e, 'mousedown');  }, false);
+function mouseMove(event){
+	var rect = canvas.getBoundingClientRect();
+	x = event.clientX - rect.left
+	y = event.clientY - rect.top
+	for(var i=0; 
+		i<gameState.entities[gameState.level].length;
+		i++){
+		gameState.entities[gameState.level][i].handleMouseMove(x, y)
+	}
+}
 
-canvas.addEventListener('mouseup',   function(e) { 
-	return update(e, 'mouseup'); }, false);
+function mouseIsOverBox(mx, my, ox, oy, ow, oh){
+	//takes mouse x, y, and object x, y, width, and height
+	return ((mx >= ox) && (mx <= ox+ow) && (my >= oy) && (my <= oy+oh))
+}
 
-canvas.addEventListener('mousemove',   function(e) { 
-	return update(e, 'mousemove'); }, false);
 
-requestAnimationFrame(frame);
+
+function testEntity(x, y, width, height){
+	this.x = x
+	this.y = y
+	this.width = width
+	this.height = height
+	this.color = '#FF0000'
+
+	this.draw = function(){
+		ctx.beginPath()
+		ctx.rect(x, y, width, height)
+		ctx.fillStyle = this.color
+		ctx.fill()
+	}
+
+	this.handleMouseDown = function(mx, my, mb){
+		if (mouseIsOverBox(mx, my, this.x, this.y, this.width, this.height)){
+			this.color = '#00FF00'
+		}
+	}
+	this.handleMouseUp = function(mx, my, mb){
+		if (mouseIsOverBox(mx, my, this.x, this.y, this.width, this.height)){
+			this.color = '#FF0000'
+		}
+	}
+	this.handleMouseMove = function(mx, my, mb){
+		if (mouseIsOverBox(mx, my, this.x, this.y, this.width, this.height)){
+			this.color = '#0000FF'
+		}
+	}
+}
+
+
+canvas.addEventListener('mousedown', mouseDown)
+canvas.addEventListener('mouseup', mouseUp)
+canvas.addEventListener('mousemove', mouseMove)
+
+function gameLoop() {
+	window.requestAnimationFrame(gameLoop);
+	updateAndRender(ctx)
+}
+gameLoop();
 
 
