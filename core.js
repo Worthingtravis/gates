@@ -15,15 +15,18 @@ function initializeGameState(){
 
 
 	gs.entities[0] = [
+		new grid(0, 0, canvas.width, canvas.height),
 		new levelButton(145, 105, 1, 1, 0, 1, 0, "levelName"),
 		new levelButton(225, 105, 2, 1, 0, 1, 0, "levelName"),
 		new levelButton(305, 105, 3, 1, 0, 1, 0, "levelName"),
 		new levelButton(385, 105, 4, 1, 0, 1, 0, "levelName"),
 		new levelButton(465, 105, 5, 1, 0, 1, 0, "levelName"),
+		new lines(),
 		]
 
 	b = new menuButton(3, 3)
-	gs.entities[1] = [b]
+	gs.entities[1] = [new grid(0, 0, canvas.width, canvas.height), b,
+		new lines()]
 	return gs
 }
 
@@ -78,45 +81,6 @@ function mouseMove(event){
 		gameState.entities[gameState.level][i].handleMouseMove(x, y)
 	}
 }
-
-function mouseIsOverBox(mx, my, ox, oy, ow, oh){
-	//takes mouse x, y, and object x, y, width, and height
-	return ((mx >= ox) && (mx <= ox+ow) && (my >= oy) && (my <= oy+oh))
-}
-
-
-
-function testEntity(x, y, width, height){
-	this.x = x
-	this.y = y
-	this.width = width
-	this.height = height
-	this.color = '#FF0000'
-
-	this.draw = function(){
-		ctx.beginPath()
-		ctx.rect(x, y, width, height)
-		ctx.fillStyle = this.color
-		ctx.fill()
-	}
-
-	this.handleMouseDown = function(mx, my, mb){
-		if (mouseIsOverBox(mx, my, this.x, this.y, this.width, this.height)){
-			this.color = '#00FF00'
-		}
-	}
-	this.handleMouseUp = function(mx, my, mb){
-		if (mouseIsOverBox(mx, my, this.x, this.y, this.width, this.height)){
-			this.color = '#FF0000'
-		}
-	}
-	this.handleMouseMove = function(mx, my, mb){
-		if (mouseIsOverBox(mx, my, this.x, this.y, this.width, this.height)){
-			this.color = '#0000FF'
-		}
-	}
-}
-
 
 canvas.addEventListener('mousedown', mouseDown)
 canvas.addEventListener('mouseup', mouseUp)

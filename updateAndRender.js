@@ -1,22 +1,191 @@
 function updateAndRender(ctx){
-	drawGrid()
-
-	if(gameState.level != 0){
-
-	}
-	else {
-		ctx.font = 'Bold 75pt Consolas';
-		ctx.textAlign = 'center';
-		ctx.textBaseline = 'top'
-		ctx.fillStyle = '#FFFFFF'
-		ctx.fillText("Gates", 400, 0);
-		ctx.strokeStyle = '#000000'
-		ctx.lineWidth = 2
-		ctx.strokeText("Gates", 400, 0);
-	}
 	for(var i=0; i<gameState.entities[gameState.level].length; i++){
 		gameState.entities[gameState.level][i].draw()
 	}
+}
+
+function lines(){
+	this.completeLines = []
+	this.incompleteLines = []
+	this.mx = 0
+	this.my = 0
+	this.mouseover = false
+	this.draw = function(){
+		for(var i=0; i<this.completeLines.length; i++){
+			drawLine(this.completeLines[i])
+		}
+		for(var i=0; i<this.incompleteLines.length; i++){
+			drawLineInProgress(this.incompleteLines[i][0], 
+				this.incompleteLines[i][1], this.mx, this.my)
+		}
+		
+	}
+	this.handleMouseMove = function(mx, my){
+		this.mx = mx
+		this.my = my
+		var len = this.completeLines.length
+		if(len == 0){
+			this.mouseover = false
+		}
+		for(var i=0; i<len; i++){
+			this.mouseover = false
+			if(mouseIsOverLine(mx, my, this.completeLines[i])){
+				this.mouseover = true
+				this.completeLines[i].mouseover = true
+			}
+			else {
+				this.completeLines[i].mouseover = false
+			}
+		}
+		
+	}
+	this.handleMouseUp = function(mx, my, mb){
+		if (mb == 0){
+			var square = getNearestSquare(mx, my)
+			for(var i=0; i<this.incompleteLines.length; i++){
+				var x1 = this.incompleteLines[0][0]
+				var y1 = this.incompleteLines[0][1]
+				var x2 = square[0]
+				var y2 = square[1]
+				if (x1 != x2 || y1 != y2){
+					var line = [x1, y1, x2, y2]
+					line.mouseover = false
+					line.live = false
+					this.completeLines.push(line)
+				}
+			}
+			this.incompleteLines = []
+		}
+		else if (mb == 2){
+			for(var i=this.completeLines.length-1; i>=0; i--){
+				if(this.completeLines[i].mouseover){
+					this.completeLines.splice(i, 1)
+					gameState.entities[gameState.level][0].handleMouseMove(mx, my)
+				}
+			}
+		}
+	}
+	this.handleMouseDown = function(mx, my, mb){
+	}
+}
+
+function grid(x, y, width, height){
+	this.x = x
+	this.y = y
+	this.width = width
+	this.height = height
+	this.mouseover = false
+	this.mx = 0
+	this.my = 0
+	this.draw = function(){
+		drawGrid(this.x, this.y, this.width, this.height)
+		if(gameState.level == 0){
+			ctx.font = 'Bold 75pt Consolas';
+			ctx.textAlign = 'center';
+			ctx.textBaseline = 'top'
+			ctx.fillStyle = '#FFFFFF'
+			ctx.fillText("Gates", 400, 0);
+			ctx.strokeStyle = '#000000'
+			ctx.lineWidth = 2
+			ctx.strokeText("Gates", 400, 0);
+		}
+	}
+	this.handleMouseMove = function(mx, my){
+		this.mx = mx
+		this.my = my
+		this.mouseover = mouseIsOverBox(mx, my, this.x, this.y, this.width, this.height)
+		for(var i=1; i<gameState.entities[gameState.level].length; i++){
+			if(gameState.entities[gameState.level][i].mouseover){
+				this.mouseover = false;
+			}
+		}
+	}
+	this.handleMouseUp = function(mx, my, mb){
+	}
+	this.handleMouseDown = function(mx, my, mb){
+		if(this.mouseover && mb == 0){
+			var l = gameState.entities[gameState.level].length
+			var square = getNearestSquare(mx, my)
+			gameState.entities[gameState.level][l-1].incompleteLines.push(square)
+		}
+	}
+}
+
+function getNearestSquare(x, y){
+	var floorX = Math.floor(x/20)*20;
+	var floorY = Math.floor(y/20)*20;
+	if (x > floorX){
+		posx = 10+floorX;
+	}
+	if (y > floorY){
+		posy = 10+floorY;
+	}
+	return [posx, posy]
+}
+
+function mouseIsOverBox(mx, my, ox, oy, ow, oh){
+	//takes mouse x, y, and object x, y, width, and height
+	return ((mx >= ox) && (mx <= ox+ow) && (my >= oy) && (my <= oy+oh))
+}
+
+function mouseIsOverLine(mx, my, line){
+	var x1 = line[0]
+	var y1 = line[1]
+	var x2 = line[2]
+	var y2 = line[3]
+
+	var m = (y2-y1)/(x2-x1)
+	if (Math.abs(m) > 1){
+		//solve for x as as function of y
+		if (y2 < y1){
+			var x1 = line[2];
+			var y1 = line[3];
+			var x2 = line[0];
+			var y2 = line[1];
+		}
+		if ((my < y2+3) && (my > y1-3)){
+			m = (x2-x1)/(y2-y1)
+			var x = ((my-y1)*m) + x1
+			if ((mx > x-3) && (mx < x+3)){
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
+	}
+	else {
+		//solve for y as a function of x
+		if (x2 < x1){
+			var x1 = line[2];
+			var y1 = line[3];
+			var x2 = line[0];
+			var y2 = line[1];
+		}
+		if ((mx < x2+3) && (mx > x1-3)){
+			var b = y2 - (x2*m);
+			var y = mx*m + b
+			if ((my > y-3) && (my < y+3)){
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
+	}
+}
+
+function mouseOverLineEnd(mx, my, line){
+	var x1 = line[0]
+	var y1 = line[1]
+	var x2 = line[2]
+	var y2 = line[3]
 }
 
 function levelButton(x, y, level, stage, locked, solved, special, levelName){
@@ -82,6 +251,8 @@ function levelButton(x, y, level, stage, locked, solved, special, levelName){
 			this.mouseover = false
 		}
 	}
+	this.handleMouseDown = function(mx, my, mb){
+	}
 }
 
 function menuButton(x, y){
@@ -119,6 +290,8 @@ function menuButton(x, y){
 			gameState.level = 0
 			this.mouseover = false
 		}
+	}
+	this.handleMouseDown = function(mx, my, mb){
 	}
 }
 
@@ -200,10 +373,10 @@ function drawStar(cx,cy){
 }
 
 
-function drawGrid(){
+function drawGrid(x, y, width, height){
 	squareColor = true;
-	for(var i=0; i<canvas.width; i+=20){
-		for (var j=0; j<canvas.height; j+=20){
+	for(var i=x; i<width; i+=20){
+		for (var j=y; j<height; j+=20){
 			ctx.beginPath();
 			ctx.rect(i, j, i+20, j+20);
 			coords = [i/20, j/20]
@@ -219,4 +392,49 @@ function drawGrid(){
 		}
 		squareColor = !squareColor
 	}
+}
+
+function drawLine(line){
+	var x1 = line[0]
+	var y1 = line[1]
+	var x2 = line[2]
+	var y2 = line[3]
+
+	ctx.beginPath();
+	ctx.moveTo(x1, y1);
+	ctx.lineTo(x2, y2);
+	ctx.moveTo(x1, y1);
+	ctx.arc(x1, y1, 2, 0, 2*Math.PI, false);
+	ctx.moveTo(x2, y2);
+	ctx.arc(x2, y2, 2, 0, 2*Math.PI, false);
+
+	if (line.mouseover){
+		ctx.strokeStyle='#FF0000';
+		ctx.fillStyle='#FF0000';
+		ctx.lineWidth = 3;
+	} else if (line.live) {
+		ctx.strokeStyle='#FFFF00';
+		ctx.fillStyle='#FFFF00';
+		ctx.lineWidth = 2;
+	}
+	else {
+		ctx.strokeStyle='#000000';
+		ctx.fillStyle='#000000';
+		ctx.lineWidth = 2;
+	}
+	ctx.fill();
+	ctx.stroke();
+}
+
+function drawLineInProgress(x, y, mx, my){
+	ctx.beginPath();
+	ctx.moveTo(x, y);
+	ctx.arc(x, y, 2, 0, 2*Math.PI, false);
+	ctx.moveTo(x, y);
+	ctx.lineTo(mx, my);
+	ctx.fillStyle = '#000000';
+	ctx.fill();
+	ctx.strokeStyle='#000000';
+	ctx.lineWidth = 2;
+	ctx.stroke();
 }
