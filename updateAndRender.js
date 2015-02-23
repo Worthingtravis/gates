@@ -29,12 +29,31 @@ function lines(){
 		}
 		for(var i=0; i<len; i++){
 			this.mouseover = false
-			if(mouseIsOverLine(mx, my, this.completeLines[i])){
+			var x1 = this.completeLines[i][0]
+			var y1 = this.completeLines[i][1]
+			var x2 = this.completeLines[i][2]
+			var y2 = this.completeLines[i][3]
+			if(mouseIsOverLineEnd(mx, my, x1, y1)){
 				this.mouseover = true
 				this.completeLines[i].mouseover = true
+				this.completeLines[i].fixedEnd = [x2, y2]
+				gameState.entities[gameState.level][0].mouseover = false
+			}
+			else if(mouseIsOverLineEnd(mx, my, x2, y2)){
+				this.mouseover = true
+				this.completeLines[i].mouseover = true
+				this.completeLines[i].fixedEnd = [x1, y1]
+				gameState.entities[gameState.level][0].mouseover = false
+			}
+			else if(mouseIsOverLine(mx, my, this.completeLines[i])){
+				this.mouseover = true
+				this.completeLines[i].mouseover = true
+				this.completeLines[i].fixedEnd = []
+				gameState.entities[gameState.level][0].mouseover = false
 			}
 			else {
 				this.completeLines[i].mouseover = false
+				this.completeLines[i].fixedEnd = []
 			}
 		}
 		
@@ -43,18 +62,17 @@ function lines(){
 		if (mb == 0){
 			var square = getNearestSquare(mx, my)
 			for(var i=0; i<this.incompleteLines.length; i++){
-				var x1 = this.incompleteLines[0][0]
-				var y1 = this.incompleteLines[0][1]
+				var x1 = this.incompleteLines[i][0]
+				var y1 = this.incompleteLines[i][1]
 				var x2 = square[0]
 				var y2 = square[1]
 				if (x1 != x2 || y1 != y2){
-					var line = [x1, y1, x2, y2]
-					line.mouseover = false
-					line.live = false
-					this.completeLines.push(line)
+					this.createLine(x1, y1, x2, y2)
 				}
 			}
+			
 			this.incompleteLines = []
+			this.organizeLines()
 		}
 		else if (mb == 2){
 			for(var i=this.completeLines.length-1; i>=0; i--){
@@ -66,6 +84,65 @@ function lines(){
 		}
 	}
 	this.handleMouseDown = function(mx, my, mb){
+		if(mb == 0){
+			for(var i=this.completeLines.length-1; i>=0; i--){
+				if(this.completeLines[i].fixedEnd.length != 0){
+					this.incompleteLines.push(this.completeLines[i].fixedEnd)
+					this.completeLines.splice(i, 1)
+					gameState.entities[gameState.level][0].handleMouseMove(mx, my)
+				}
+			}
+		}
+	}
+
+	this.createLine = function(x1, y1, x2, y2){
+		var duplicate = false
+		var line = [x1, y1, x2, y2]
+		for(var i=0; i<this.completeLines.length; i++){
+			if(linesAreIdentical(line, this.completeLines[i])){
+				duplicate = true
+			}
+		}
+		if(!duplicate){
+			line.mouseover = false
+			line.live = false
+			line.fixedEnd = []
+			this.completeLines.push(line)
+		}
+	}
+
+	this.consolidateLines = function(l){
+		var c = 0
+		for (var i=0; i<l.length-1; i++){
+			for (var j=i+1; j<l.length; j++){
+				if (linesAreConnected(l[i], l[j])) {
+					if (l[j].id < l[i].id) {
+						l[i].id = l[j].id;
+						c += 1;
+					}
+					else if (l[j].id > l[i].id){
+						l[j].id = l[i].id;
+						c += 1;
+					}
+				}
+			}
+		}
+		for (var k=0; k<=c; k++){
+			this.consolidateLines(l)
+		}
+	}
+
+	//makes the id of every line different
+	this.resetLines = function(){
+		for (var i=0; i<this.completeLines.length; i++){
+			this.completeLines[i].id = i;
+		}
+	}
+
+	//redoes computations for line ids
+	this.organizeLines = function(){
+		this.resetLines()
+		this.consolidateLines(this.completeLines)
 	}
 }
 
@@ -94,11 +171,6 @@ function grid(x, y, width, height){
 		this.mx = mx
 		this.my = my
 		this.mouseover = mouseIsOverBox(mx, my, this.x, this.y, this.width, this.height)
-		for(var i=1; i<gameState.entities[gameState.level].length; i++){
-			if(gameState.entities[gameState.level][i].mouseover){
-				this.mouseover = false;
-			}
-		}
 	}
 	this.handleMouseUp = function(mx, my, mb){
 	}
@@ -181,11 +253,11 @@ function mouseIsOverLine(mx, my, line){
 	}
 }
 
-function mouseOverLineEnd(mx, my, line){
-	var x1 = line[0]
-	var y1 = line[1]
-	var x2 = line[2]
-	var y2 = line[3]
+function mouseIsOverLineEnd(mx, my, px, py){
+	var ps = 4
+	if (mx >= px-ps && mx <= px+ps && my >= py-ps && my <= py+ps){
+		return true
+	}
 }
 
 function levelButton(x, y, level, stage, locked, solved, special, levelName){
@@ -244,6 +316,9 @@ function levelButton(x, y, level, stage, locked, solved, special, levelName){
 	}
 	this.handleMouseMove = function(mx, my){
 		this.mouseover = mouseIsOverBox(mx, my, this.x, this.y, this.width, this.height)
+		if(this.mouseover){
+			gameState.entities[gameState.level][0].mouseover = false
+		}
 	}
 	this.handleMouseUp = function(mx, my, mb){
 		if (mb == 0 && this.mouseover){
@@ -284,6 +359,9 @@ function menuButton(x, y){
 	}
 	this.handleMouseMove = function(mx, my){
 		this.mouseover = mouseIsOverBox(mx, my, this.x, this.y, this.width, this.height)
+		if(this.mouseover){
+			gameState.entities[gameState.level][0].mouseover = false
+		}
 	}
 	this.handleMouseUp = function(mx, my, mb){
 		if (mb == 0 && this.mouseover){
@@ -408,10 +486,19 @@ function drawLine(line){
 	ctx.moveTo(x2, y2);
 	ctx.arc(x2, y2, 2, 0, 2*Math.PI, false);
 
+/*
+	ctx.font = 'Italic 12pt Consolas';
+	ctx.textAlign = 'center';
+	ctx.textBaseline = 'middle'
+	ctx.fillStyle = '#000000'
+	ctx.fillText(line.id, (x1+x2)/2, (y1+y2)/2-8);
+*/
+
 	if (line.mouseover){
 		ctx.strokeStyle='#FF0000';
 		ctx.fillStyle='#FF0000';
 		ctx.lineWidth = 3;
+
 	} else if (line.live) {
 		ctx.strokeStyle='#FFFF00';
 		ctx.fillStyle='#FFFF00';
@@ -432,9 +519,69 @@ function drawLineInProgress(x, y, mx, my){
 	ctx.arc(x, y, 2, 0, 2*Math.PI, false);
 	ctx.moveTo(x, y);
 	ctx.lineTo(mx, my);
-	ctx.fillStyle = '#000000';
+	ctx.fillStyle = "#000000";
 	ctx.fill();
-	ctx.strokeStyle='#000000';
+	ctx.strokeStyle= "#000000";
 	ctx.lineWidth = 2;
 	ctx.stroke();
+}
+
+function linesAreIdentical(l1, l2){
+	var ax1 = l1[0];
+	var ay1 = l1[1];
+	var ax2 = l1[2];
+	var ay2 = l1[3];
+
+	var bx1 = l2[0];
+	var by1 = l2[1];
+	var bx2 = l2[2];
+	var by2 = l2[3];
+
+	if (ax1 == bx1 && ay1 == by1){
+		if (ax2 == bx2 && ay2 == by2){
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	else if (ax1 == bx2 && ay1 == by2){
+		if (ax2 == bx1 && ay2 == by1){
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	else {
+		return false;
+	}
+}
+
+function linesAreConnected(l1, l2){
+	var ax1 = l1[0];
+	var ay1 = l1[1];
+	var ax2 = l1[2];
+	var ay2 = l1[3];
+
+	var bx1 = l2[0];
+	var by1 = l2[1];
+	var bx2 = l2[2];
+	var by2 = l2[3];
+
+	if (ax1 == bx1 && ay1 == by1){
+		return true;
+	}
+	else if (ax2 == bx1 && ay2 == by1){
+		return true;
+	}
+	else if (ax1 == bx2 && ay1 == by2){
+		return true;
+	}
+	else if (ax2 == bx2 && ay2 == by2){
+		return true;
+	}
+	else {
+		return false;
+	}
 }
