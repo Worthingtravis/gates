@@ -15,10 +15,10 @@ function lines(){
 			drawLine(this.completeLines[i])
 		}
 		for(var i=0; i<this.incompleteLines.length; i++){
-			drawLineInProgress(this.incompleteLines[i][0], 
+			drawLineInProgress(this.incompleteLines[i][0],
 				this.incompleteLines[i][1], this.mx, this.my)
 		}
-		
+
 	}
 	this.handleMouseMove = function(mx, my){
 		this.mx = mx
@@ -56,7 +56,7 @@ function lines(){
 				this.completeLines[i].fixedEnd = []
 			}
 		}
-		
+
 	}
 	this.handleMouseUp = function(mx, my, mb){
 		if (mb == 0){
@@ -70,7 +70,7 @@ function lines(){
 					this.createLine(x1, y1, x2, y2)
 				}
 			}
-			
+
 			this.incompleteLines = []
 			this.organizeLines()
 		}
@@ -206,6 +206,8 @@ function mouseIsOverLine(mx, my, line){
 	var x2 = line[2]
 	var y2 = line[3]
 
+	var lineWidth = 5;
+
 	var m = (y2-y1)/(x2-x1)
 	if (Math.abs(m) > 1){
 		//solve for x as as function of y
@@ -215,10 +217,10 @@ function mouseIsOverLine(mx, my, line){
 			var x2 = line[0];
 			var y2 = line[1];
 		}
-		if ((my < y2+3) && (my > y1-3)){
+		if ((my < y2+linewWidth) && (my > y1-linewWidth)){
 			m = (x2-x1)/(y2-y1)
 			var x = ((my-y1)*m) + x1
-			if ((mx > x-3) && (mx < x+3)){
+			if ((mx > x-linewWidth) && (mx < x+linewWidth)){
 				return true;
 			}
 			else {
@@ -237,10 +239,10 @@ function mouseIsOverLine(mx, my, line){
 			var x2 = line[0];
 			var y2 = line[1];
 		}
-		if ((mx < x2+3) && (mx > x1-3)){
+		if ((mx < x2+lineWidth) && (mx > x1-lineWidth)){
 			var b = y2 - (x2*m);
 			var y = mx*m + b
-			if ((my > y-3) && (my < y+3)){
+			if ((my > y-lineWidth) && (my < y+lineWidth)){
 				return true;
 			}
 			else {
@@ -311,8 +313,8 @@ function levelButton(x, y, level, stage, locked, solved, special, levelName){
 			ctx.strokeStyle = '#000000'
 			ctx.lineWidth = 1
 			ctx.strokeText(this.level, x+25, y+25);
-			
-		}	
+
+		}
 	}
 	this.handleMouseMove = function(mx, my){
 		this.mouseover = mouseIsOverBox(mx, my, this.x, this.y, this.width, this.height)
